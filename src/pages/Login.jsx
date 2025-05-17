@@ -1,18 +1,28 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import LoginForm from '../components/Auth/LoginForm';
 import SignupForm from '../components/Auth/SignupForm';
+import LoadingSpinner from '../components/Shared/LoadingSpinner';
 
 const Login = ({ onLogin }) => {
   const { darkMode } = useTheme();
-  const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
-
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-  };
-
+  const location = useLocation();
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  
+  const isLoginPath = location.pathname === '/login';
+  
+  useEffect(() => {
+    // Simulate initial page load
+    const timer = setTimeout(() => {
+      setIsPageLoading(false);
+    }, 800);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
   const handleSubmit = (formData) => {
     console.log('Form submitted:', formData);
     
@@ -22,27 +32,40 @@ const Login = ({ onLogin }) => {
     // Redirect to dashboard
     navigate('/dashboard');
   };
+  
+  if (isPageLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+        <div className="text-center">
+          <LoadingSpinner size="large" color={darkMode ? "white" : "primary"} />
+          <p className="mt-4 text-gray-600 dark:text-gray-300 text-lg">
+            Loading {isLoginPath ? "Login" : "Signup"}...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
-            {isLogin ? 'Sign in to your account' : 'Create a new account'}
+            {isLoginPath ? 'Sign in to your account' : 'Create a new account'}
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}
-            <button
-              onClick={toggleAuthMode}
+            {isLoginPath ? "Don't have an account?" : "Already have an account?"}
+            <Link
+              to={isLoginPath ? '/signup' : '/login'}
               className="ml-1 font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
             >
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
+              {isLoginPath ? 'Sign up' : 'Sign in'}
+            </Link>
           </p>
         </div>
         
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-8 transition-colors duration-200">
-          {isLogin ? (
+          {isLoginPath ? (
             <LoginForm onSubmit={handleSubmit} />
           ) : (
             <SignupForm onSubmit={handleSubmit} />

@@ -15,7 +15,8 @@ import {
   X,
   Save,
   Download,
-  Share2
+  Share2,
+  Eye
 } from 'lucide-react';
 
 // Import shared components
@@ -28,6 +29,7 @@ const ResumeBuilder = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('personal');
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
     personal: {
       firstName: 'Alex',
@@ -135,6 +137,14 @@ const ResumeBuilder = () => {
     }
   };
 
+  // Generate shareable link
+  const generateShareLink = () => {
+    const dummyLink = `https://myresume.app/share/${Math.random().toString(36).substring(2, 10)}`;
+    // In a real app, you would generate a proper link based on user data
+    navigator.clipboard.writeText(dummyLink);
+    alert(`Link copied to clipboard: ${dummyLink}`);
+  };
+
   // Sections for navigation
   const sections = [
     { id: 'personal', name: 'Personal Info', icon: <User size={20} /> },
@@ -198,8 +208,8 @@ const ResumeBuilder = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                {/* Section Navigation */}
-                <div className="flex overflow-x-auto scrollbar-hide border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                {/* Section Navigation - Removed overflow-x-auto for the scrollbar */}
+                <div className="flex flex-wrap border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
                   {sections.map(section => (
                     <motion.button
                       key={section.id}
@@ -266,43 +276,83 @@ const ResumeBuilder = () => {
                       ))}
                     </div>
                   </div>
-                  <div className="flex justify-end space-x-2">
+                  <div className="flex justify-between items-center">
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                      className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm"
+                      onClick={() => setShowPreview(!showPreview)}
                     >
-                      <Download size={18} />
+                      <Eye size={16} className="mr-2" />
+                      {showPreview ? "Hide Preview" : "Display Preview"}
                     </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
-                    >
-                      <Share2 size={18} />
-                    </motion.button>
+                    
+                    <div className="flex space-x-2">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                        title="Download Resume"
+                      >
+                        <Download size={18} />
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                        title="Share Resume"
+                        onClick={generateShareLink}
+                      >
+                        <Share2 size={18} />
+                      </motion.button>
+                    </div>
                   </div>
                 </div>
                 
-                {/* Resume Preview */}
-                <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h3 className="font-medium text-gray-900 dark:text-white">Preview</h3>
-                  </div>
-                  <div className="p-4 h-full overflow-y-auto">
-                    <ResumePreview 
-                      data={formData} 
-                      template={activeTemplate} 
-                    />
-                  </div>
-                </div>
+                {/* Resume Preview - Only shown when showPreview is true */}
+                <AnimatePresence>
+                  {showPreview && (
+                    <motion.div 
+                      className="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 className="font-medium text-gray-900 dark:text-white">Preview</h3>
+                      </div>
+                      <div className="p-4 h-full overflow-y-auto">
+                        <ResumePreview 
+                          data={formData} 
+                          template={activeTemplate} 
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Placeholder when preview is not shown */}
+                {!showPreview && (
+                  <motion.div 
+                    className="flex-1 bg-gray-100 dark:bg-gray-700 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="text-center p-6">
+                      <Eye size={32} className="mx-auto mb-2 text-gray-400 dark:text-gray-500" />
+                      <p className="text-gray-500 dark:text-gray-400">Click "Display Preview" to see your resume</p>
+                    </div>
+                  </motion.div>
+                )}
               </motion.div>
             </div>
           </div>
         </main>
       </div>
       
-      {/* AI Assistant Panel - Now more responsive */}
+      {/* AI Assistant Panel */}
       <AnimatePresence>
         {isAIAssistantOpen && (
           <motion.div
