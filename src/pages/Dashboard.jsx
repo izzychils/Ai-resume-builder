@@ -20,7 +20,7 @@ import Sidebar from '../components/Shared/Sidebar';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Mock data for resumes
   const resumes = [

@@ -46,9 +46,10 @@ const Navbar = ({ toggleSidebar }) => {
         <div className="flex items-center justify-between h-16">
           {/* Left side: Logo and mobile menu button */}
           <div className="flex items-center">
+            {/* Menu button - visible on all screen sizes */}
             <button
               onClick={toggleSidebar}
-              className="md:hidden p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+              className="md:absolute left-1 p-2 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
               aria-label="Toggle sidebar"
             >
               <Menu size={20} />

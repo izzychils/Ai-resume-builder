@@ -156,7 +156,7 @@ const ResumeBuilder = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
+    <div className=" bg-gray-100 dark:bg-gray-900">
       {/* Navbar */}
       <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       
@@ -166,7 +166,7 @@ const ResumeBuilder = () => {
         
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-6 max-w-7xl mx-auto">
+          <div className="p-4 md:p-1 max-w-7xl mx-auto">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
               <motion.div 

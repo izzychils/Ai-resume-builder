@@ -127,7 +127,7 @@ ${formData.fullName}`;
       <Sidebar isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:ml-64">
+      <div className=" flex-1 flex flex-col overflow-hidden">
         {/* Navbar */}
         <Navbar toggleSidebar={toggleSidebar} />
         

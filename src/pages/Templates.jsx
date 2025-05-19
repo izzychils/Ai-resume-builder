@@ -8,7 +8,7 @@ import {
   Sparkles,
   Check
 } from 'lucide-react';
-import EnhancedTemplateCard from '../components/Templates/TemplateCard';
+// import EnhancedTemplateCard from '../components/Templates/TemplateCard';
 import Sidebar from '../components/Shared/Sidebar';
 import Navbar from '../components/Shared/Navbar'
 
@@ -166,7 +166,7 @@ const Templates = () => {
   // };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300 ">
       {/* Navbar */}
       <Navbar toggleSidebar={toggleSidebar} />
       

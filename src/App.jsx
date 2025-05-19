@@ -3,11 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import Home from './pages/Home';
 import Dashboard from './pages/Dashboard';
+import Resumes from './pages/Resumes';
 import ResumeBuilder from './pages/ResumeBuilder';
 import Templates from './pages/Templates';
 import CoverLetter from './pages/CoverLetter';
 import Login from './pages/Login';
 import ProfilePage from './pages/ProfilePage'; 
+import Subscription from './pages/Subscription'
 import SettingsPage from './pages/SettingsPage'
 
 function App() {
@@ -69,6 +71,10 @@ function App() {
                   element={isAuthenticated ? <Dashboard /> : <Navigate to="/dashboard" />}
                 />
                 <Route 
+                  path="/resumes"
+                  element={isAuthenticated ? <Resumes /> : <Navigate to="/resumes" />}
+                />
+                <Route 
                   path="/resume-builder"
                   element={isAuthenticated ? <ResumeBuilder /> : <Navigate to="/resume-builder" />}
                 />
@@ -84,6 +90,10 @@ function App() {
                 <Route 
                   path="/profile"
                   element={isAuthenticated ? <ProfilePage /> : <Navigate to="/profile" />}
+                />
+                <Route 
+                  path="/subscription"
+                  element={isAuthenticated ? <Subscription /> : <Navigate to="/subscription" />}
                 />
                 <Route 
                   path="/settings"
