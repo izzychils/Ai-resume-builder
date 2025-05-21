@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, 
@@ -16,7 +16,13 @@ import {
   Save,
   Download,
   Share2,
-  Eye
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  Maximize2,
+  Minimize2,
+  Upload
 } from 'lucide-react';
 
 // Import shared components
@@ -24,77 +30,33 @@ import Navbar from '../components/Shared/Navbar';
 import Sidebar from '../components/Shared/Sidebar';
 import ResumeForm from '../components/Resume/ResumeForm';
 import ResumePreview from '../components/Resume/ResumePreview';
+import LoadingSpinner from '../components/Shared/LoadingSpinner';
 
 const ResumeBuilder = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('personal');
   const [isAIAssistantOpen, setIsAIAssistantOpen] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [copied, setCopied] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [fullscreenLoading, setFullscreenLoading] = useState(false);
+  const fileInputRef = useRef(null);
+  const [previewData, setPreviewData] = useState({});
+
+  // Update preview handler
+  const handleUpdatePreview = (data) => {
+    setPreviewData(data);
+    console.log("Updated preview data:", data);
+  };
+  
   const [formData, setFormData] = useState({
-    personal: {
-      firstName: 'Alex',
-      lastName: 'Johnson',
-      email: 'alex.johnson@example.com',
-      phone: '(555) 123-4567',
-      location: 'San Francisco, CA',
-      linkedIn: 'linkedin.com/in/alexjohnson',
-      website: 'alexjohnson.dev'
-    },
-    summary: {
-      text: 'Experienced software developer with a passion for creating user-friendly applications. Skilled in React, Node.js, and cloud technologies with a focus on building scalable solutions.'
-    },
-    experience: [
-      {
-        id: 1,
-        title: 'Frontend Developer',
-        company: 'Tech Innovations Inc.',
-        location: 'San Francisco, CA',
-        startDate: '2021-03',
-        endDate: '',
-        current: true,
-        description: 'Developed responsive web applications using React and TypeScript.\nImplemented state management with Redux and optimized app performance.\nCollaborated with design team to create intuitive user interfaces.'
-      },
-      {
-        id: 2,
-        title: 'Junior Developer',
-        company: 'Digital Solutions LLC',
-        location: 'Portland, OR',
-        startDate: '2019-06',
-        endDate: '2021-02',
-        current: false,
-        description: 'Built and maintained client websites using JavaScript, HTML, and CSS.\nAssisted in migrating legacy systems to modern frameworks.'
-      }
-    ],
-    education: [
-      {
-        id: 1,
-        degree: 'B.S. Computer Science',
-        institution: 'University of California',
-        location: 'Berkeley, CA',
-        startDate: '2015-09',
-        endDate: '2019-05',
-        description: 'Graduated with honors. Relevant coursework: Data Structures, Algorithms, Web Development.'
-      }
-    ],
-    skills: [
-      { id: 1, name: 'React', level: 'Advanced' },
-      { id: 2, name: 'JavaScript', level: 'Advanced' },
-      { id: 3, name: 'Node.js', level: 'Intermediate' },
-      { id: 4, name: 'TypeScript', level: 'Intermediate' },
-      { id: 5, name: 'HTML/CSS', level: 'Advanced' },
-      { id: 6, name: 'Git', level: 'Intermediate' },
-      { id: 7, name: 'AWS', level: 'Beginner' }
-    ],
-    certifications: [
-      {
-        id: 1,
-        name: 'AWS Certified Developer',
-        issuer: 'Amazon Web Services',
-        date: '2022-08',
-        expires: '2025-08'
-      }
-    ]
-  });
+    personal: {},
+    summary: {},
+    education: [{}],
+    skills: []});
 
   // Mock template data
   const [activeTemplate, setActiveTemplate] = useState('modern');
@@ -137,12 +99,60 @@ const ResumeBuilder = () => {
     }
   };
 
+  const modalAnimation = {
+    hidden: { opacity: 0, scale: 0.9 },
+    visible: { 
+      opacity: 1, 
+      scale: 1,
+      transition: { type: 'spring', damping: 25, stiffness: 300 }
+    },
+    exit: { 
+      opacity: 0, 
+      scale: 0.9,
+      transition: { duration: 0.2 }
+    }
+  };
+
   // Generate shareable link
   const generateShareLink = () => {
-    const dummyLink = `https://myresume.app/share/${Math.random().toString(36).substring(2, 10)}`;
-    // In a real app, you would generate a proper link based on user data
-    navigator.clipboard.writeText(dummyLink);
-    alert(`Link copied to clipboard: ${dummyLink}`);
+    setShareModalOpen(true);
+    
+    // Simulate network request delay
+    setTimeout(() => {
+      const dummyLink = `https://myresume.app/share/${Math.random().toString(36).substring(2, 10)}`;
+      setShareLink(dummyLink);
+    }, 1000);
+  };
+
+  // Copy link to clipboard
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  // File upload handler
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Process the file here
+      console.log("File uploaded:", file.name);
+      // Add logic to handle the file
+    }
+  };
+
+  // Toggle file input click
+  const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+
+  // Toggle fullscreen preview
+  const toggleFullscreenPreview = () => {
+    setFullscreenLoading(true);
+    setTimeout(() => {
+      setIsFullscreen(!isFullscreen);
+      setFullscreenLoading(false);
+    }, 500);
   };
 
   // Sections for navigation
@@ -152,15 +162,20 @@ const ResumeBuilder = () => {
     { id: 'experience', name: 'Experience', icon: <Briefcase size={20} /> },
     { id: 'education', name: 'Education', icon: <GraduationCap size={20} /> },
     { id: 'skills', name: 'Skills', icon: <Star size={20} /> },
-    { id: 'certifications', name: 'Certifications', icon: <Award size={20} /> }
+    // { id: 'certifications', name: 'Certifications', icon: <Award size={20} /> }
   ];
 
+  // Preview display and hide handlers
+  const handleDisplayPreview = () => {
+    setShowPreview(!showPreview);
+  };
+
   return (
-    <div className=" bg-gray-100 dark:bg-gray-900">
+    <div className="bg-gray-100 dark:bg-gray-900">
       {/* Navbar */}
       <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
       
-      <div className="flex flex-1 pt-16 overflow-hidden">
+      <div className="flex flex-1 pt-7 overflow-hidden">
         {/* Sidebar */}
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         
@@ -193,9 +208,19 @@ const ResumeBuilder = () => {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                   className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md shadow-sm"
+                  onClick={() => {
+                    setIsLoading(true);
+                    setTimeout(() => setIsLoading(false), 1000); // Simulate saving
+                  }}
                 >
-                  <Save size={16} className="mr-2" />
-                  Save
+                  {isLoading ? (
+                    <LoadingSpinner size="small" color="white" />
+                  ) : (
+                    <>
+                      <Save size={16} className="mr-2" />
+                      Save
+                    </>
+                  )}
                 </motion.button>
               </div>
             </div>
@@ -208,7 +233,7 @@ const ResumeBuilder = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                {/* Section Navigation - Removed overflow-x-auto for the scrollbar */}
+                {/* Section Navigation */}
                 <div className="flex flex-wrap border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
                   {sections.map(section => (
                     <motion.button
@@ -237,11 +262,11 @@ const ResumeBuilder = () => {
                       exit="exit"
                       variants={sectionAnimation}
                     >
-                      <ResumeForm 
-                        section={activeSection} 
-                        data={formData[activeSection]} 
-                        onChange={(value) => handleFormChange(activeSection, value)} 
-                      />
+                      
+                    <ResumeForm 
+                      activeSection={activeSection} 
+                      updatePreview={handleUpdatePreview} 
+                    />
                     </motion.div>
                   </AnimatePresence>
                 </div>
@@ -281,10 +306,19 @@ const ResumeBuilder = () => {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm"
-                      onClick={() => setShowPreview(!showPreview)}
+                      onClick={handleDisplayPreview}
                     >
-                      <Eye size={16} className="mr-2" />
-                      {showPreview ? "Hide Preview" : "Display Preview"}
+                      {showPreview ? (
+                        <>
+                          <EyeOff size={16} className="mr-2" />
+                          Hide Preview
+                        </>
+                      ) : (
+                        <>
+                          <Eye size={16} className="mr-2" />
+                          Display Preview
+                        </>
+                      )}
                     </motion.button>
                     
                     <div className="flex space-x-2">
@@ -293,8 +327,16 @@ const ResumeBuilder = () => {
                         whileTap={{ scale: 0.95 }}
                         className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                         title="Download Resume"
+                        onClick={() => {
+                          setIsLoading(true);
+                          setTimeout(() => setIsLoading(false), 1000); // Simulate download
+                        }}
                       >
-                        <Download size={18} />
+                        {isLoading ? (
+                          <LoadingSpinner size="small" />
+                        ) : (
+                          <Download size={18} />
+                        )}
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
@@ -319,8 +361,20 @@ const ResumeBuilder = () => {
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                         <h3 className="font-medium text-gray-900 dark:text-white">Preview</h3>
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          onClick={toggleFullscreenPreview}
+                          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                        >
+                          {fullscreenLoading ? (
+                            <LoadingSpinner size="small" />
+                          ) : (
+                            <Maximize2 size={18} />
+                          )}
+                        </motion.button>
                       </div>
                       <div className="p-4 h-full overflow-y-auto">
                         <ResumePreview 
@@ -384,7 +438,19 @@ const ResumeBuilder = () => {
                 <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Upload Job Description</h4>
                 <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center">
                   <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">Upload a job description to tailor your resume</p>
-                  <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    accept=".pdf,.doc,.docx,.txt"
+                  />
+                  <button 
+                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-md text-sm flex items-center justify-center mx-auto"
+                    onClick={triggerFileInput}
+                  >
+                    <Upload size={16} className="mr-2" />
                     Upload Document
                   </button>
                 </div>
@@ -446,6 +512,134 @@ const ResumeBuilder = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      
+      {/* Share Modal with Blurred Background */}
+      <AnimatePresence>
+        {shareModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30 backdrop-blur-sm p-4">
+            <motion.div 
+              className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              variants={modalAnimation}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+                <h3 className="font-medium text-gray-900 dark:text-white">Share Your Resume</h3>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShareModalOpen(false)}
+                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                >
+                  <X size={18} />
+                </motion.button>
+              </div>
+              
+              <div className="p-6">
+                <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  Share this link with others to give them access to your resume:
+                </p>
+                <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
+                  <input
+                    type="text"
+                    value={shareLink}
+                    readOnly
+                    className="flex-1 py-2 px-3 bg-transparent border-none focus:outline-none text-gray-700 dark:text-gray-200"
+                  />
+                  <button 
+                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-600"
+                    onClick={copyToClipboard}
+                  >
+                    {copied ? <Check size={18} /> : <Copy size={18} />}
+                  </button>
+                </div>
+                <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                  {copied ? "Copied to clipboard!" : "Click the icon to copy link"}
+                </div>
+              </div>
+              
+              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-750 rounded-b-lg text-right">
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
+                  onClick={() => setShareModalOpen(false)}
+                >
+                  Close
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      
+      {/* Fullscreen Preview Modal */}
+      <AnimatePresence>
+        {isFullscreen && (
+          <div 
+            className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto" 
+            onClick={(e) => e.target === e.currentTarget && toggleFullscreenPreview()}
+          >
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Resume Preview</h2>
+                <div className="flex items-center space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => {
+                      setIsLoading(true);
+                      setTimeout(() => setIsLoading(false), 1000); // Simulate download
+                    }}
+                    className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-gray-800 rounded-full shadow"
+                    title="Download Resume"
+                  >
+                    <Download size={20} />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={generateShareLink}
+                    className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-gray-800 rounded-full shadow"
+                    title="Share Resume"
+                  >
+                    <Share2 size={20} />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={toggleFullscreenPreview}
+                    className="p-2 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 bg-white dark:bg-gray-800 rounded-full shadow"
+                    title="Close Fullscreen"
+                  >
+                    {fullscreenLoading ? (
+                      <LoadingSpinner size="small" />
+                    ) : (
+                      <Minimize2 size={20} />
+                    )}
+                  </motion.button>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div className="p-6 md:p-8">
+                  <ResumePreview 
+                    data={formData} 
+                    template={activeTemplate} 
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </AnimatePresence>
+      
+      {/* Global Loading Overlay - Only for main operations, not for modal/preview toggling */}
+      {isLoading && !shareModalOpen && !fullscreenLoading && (
+        <LoadingSpinner fullScreen />
+      )}
     </div>
   );
 };

@@ -15,13 +15,13 @@ import {
   UserCog
 } from "lucide-react";
 
-// Import Navbar and Sidebar from the provided code
+
 import Navbar from "../components/Shared/Navbar";
 import Sidebar from "../components/Shared/Sidebar";
 
 const SettingsPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("profile"); // Default to profile tab
+  const [activeTab, setActiveTab] = useState("profile"); 
   const [theme, setTheme] = useState("system");
   const [showNotifications, setShowNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -29,7 +29,7 @@ const SettingsPage = () => {
   const [language, setLanguage] = useState("english");
   const [savedMessage, setSavedMessage] = useState("");
   
-  // Profile state
+ 
   const [userName, setUserName] = useState("John Doe");
   const [userEmail, setUserEmail] = useState("john.doe@example.com");
   const [profileIcon, setProfileIcon] = useState("default"); // default, circle, cog

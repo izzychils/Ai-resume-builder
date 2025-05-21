@@ -3,7 +3,7 @@ import SectionEditor from "./SectionEditor";
 import Button from "../Shared/Button";
 import { Upload, Sparkles, FileText } from "lucide-react";
 
-const ResumeForm = ({ updatePreview }) => {
+const ResumeForm = ({ updatePreview, activeSection }) => {
   // Initial resume data structure
   const [resumeData, setResumeData] = useState({
     sections: [
@@ -140,7 +140,9 @@ const ResumeForm = ({ updatePreview }) => {
     };
     
     setResumeData(newResumeData);
-    updatePreview(newResumeData);
+    if (updatePreview) {
+      updatePreview(newResumeData);
+    }
   };
 
   // Handler for updating a specific section
@@ -193,54 +195,59 @@ const ResumeForm = ({ updatePreview }) => {
     alert("Job description uploaded! In a real app, AI would analyze this to tailor your resume.");
   };
 
+  // Filter for active section only instead of showing all sections
+  const activeSectionData = resumeData.sections.find(section => section.id === activeSection);
+
   return (
     <div className="flex flex-col">
-      {/* Job Description Upload */}
-      <div className="mb-6 bg-blue-50 dark:bg-gray-800 rounded-lg p-4 border border-blue-100 dark:border-gray-700">
-        <div className="flex flex-col md:flex-row md:items-center justify-between">
-          <div className="mb-4 md:mb-0">
-            <h3 className="text-lg font-medium text-blue-800 dark:text-blue-300 flex items-center">
-              <Sparkles size={20} className="mr-2" />
-              Tailor Your Resume with AI
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Upload a job description to optimize your resume for specific positions.
-            </p>
-          </div>
-          <div className="flex">
-            <label className="cursor-pointer">
-              <input
-                type="file"
-                className="hidden"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={handleJobDescriptionUpload}
-              />
-              <Button variant="outline" className="flex items-center">
-                <Upload size={18} className="mr-2" />
-                Upload Job Description
-              </Button>
-            </label>
+      {/* Job Description Upload - Only show on initial view or when appropriate */}
+      {activeSection === "personal" && (
+        <div className="mb-6 bg-blue-50 dark:bg-gray-800 rounded-lg p-4 border border-blue-100 dark:border-gray-700">
+          <div className="flex flex-col md:flex-row md:items-center justify-between">
+            <div className="mb-4 md:mb-0">
+              <h3 className="text-lg font-medium text-blue-800 dark:text-blue-300 flex items-center">
+                <Sparkles size={20} className="mr-2" />
+                Tailor Your Resume with AI
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Upload a job description to optimize your resume for specific positions.
+              </p>
+            </div>
+            <div className="flex">
+              <label className="cursor-pointer">
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleJobDescriptionUpload}
+                />
+                <Button variant="outline" className="flex items-center">
+                  <Upload size={18} className="mr-2" />
+                  Upload Job Description
+                </Button>
+              </label>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Form Sections */}
-      <div className="space-y-6">
-        {resumeData.sections.map((section) => (
+      {/* Show only the active section */}
+      {activeSectionData && (
+        <div className="space-y-6">
           <SectionEditor
-            key={section.id}
-            section={section}
+            key={activeSectionData.id}
+            section={activeSectionData}
             updateSection={handleSectionUpdate}
-            addable={section.addable}
-            removable={section.removable}
+            addable={activeSectionData.addable}
+            removable={activeSectionData.removable}
             onAdd={handleAddItem}
             onRemove={handleRemoveItem}
-            aiSuggestion={section.aiSuggestion}
+            aiSuggestion={activeSectionData.aiSuggestion}
           />
-        ))}
-      </div>
+        </div>
+      )}
 
-      {/* Save/Export Button */}
+      {/* Save/Export Button - Can be conditionally shown as needed */}
       <div className="mt-8 flex justify-center">
         <Button className="flex items-center px-6">
           <FileText size={18} className="mr-2" />

@@ -178,7 +178,8 @@ const Templates = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-3 text-gray-800 dark:text-white flex items-center gap-2">
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Resume Templates</span>
+              <span className=" bg-clip-text text-black">Resume Templates</span>
+              {/* bg-gradient-to-r from-blue-600 to-indigo-600 */}
               {selectedTemplate && (
                 <span className="inline-flex items-center text-sm font-medium py-1 px-2 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 animate-fadeIn">
                   <Check size={14} className="mr-1" />
@@ -368,8 +369,8 @@ const Templates = () => {
                         className={`
                           flex-1 flex items-center justify-center px-4 py-2 rounded-md transition-all duration-300
                           ${selectedTemplate === template.id 
-                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                            : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'}
+                            ? 'bg-blue-600 text-white hover:bg-blue-700 dark:text-white' 
+                            : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white'}
                         `}
                       >
                         {selectedTemplate === template.id ? (
