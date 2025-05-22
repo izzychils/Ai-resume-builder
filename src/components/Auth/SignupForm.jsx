@@ -2,8 +2,10 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Button from "../Shared/Button";
 import LoadingSpinner from "../Shared/LoadingSpinner";
+import { useNavigate } from "react-router-dom";
 
 const SignupForm = ({ onSubmit }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -151,9 +153,19 @@ const SignupForm = ({ onSubmit }) => {
     }
     
     setIsLoading(true);
-    console.log("Signup form submitted:", formData);
     
     try {
+      // Store user data in localStorage (excluding password)
+      const userData = {
+        fullName: formData.fullName,
+        email: formData.email
+      };
+      
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // Create a mock auth token
+      localStorage.setItem('authToken', 'mock-auth-token-' + Date.now());
+      
       // Simulate API call with a timeout
       await new Promise(resolve => setTimeout(resolve, 1500));
       
@@ -161,6 +173,10 @@ const SignupForm = ({ onSubmit }) => {
       if (onSubmit) {
         onSubmit(formData);
       }
+      
+      // Navigate to dashboard after successful signup
+      navigate('/dashboard');
+      
     } catch (error) {
       console.error("Signup error:", error);
     } finally {

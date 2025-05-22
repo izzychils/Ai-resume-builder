@@ -95,9 +95,9 @@ const Home = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <img 
-              src="/api/placeholder/600/400" 
+              src="../components/Shared/homepic.png" 
               alt="Resume Builder Preview" 
-              className="rounded-lg shadow-2xl w-full h-auto"
+              className="rounded-lg shadow-2xl w-full h-auto sm:hidden"
             />
           </motion.div>
         </div>

@@ -31,6 +31,7 @@ import Sidebar from '../components/Shared/Sidebar';
 import ResumeForm from '../components/Resume/ResumeForm';
 import ResumePreview from '../components/Resume/ResumePreview';
 import LoadingSpinner from '../components/Shared/LoadingSpinner';
+import ShareModal from '../components/Shared/ShareModal';
 
 const ResumeBuilder = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -39,8 +40,8 @@ const ResumeBuilder = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [isShareLoading, setIsShareLoading] = useState(false);
   const [shareLink, setShareLink] = useState('');
-  const [copied, setCopied] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [fullscreenLoading, setFullscreenLoading] = useState(false);
   const fileInputRef = useRef(null);
@@ -99,36 +100,21 @@ const ResumeBuilder = () => {
     }
   };
 
-  const modalAnimation = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { type: 'spring', damping: 25, stiffness: 300 }
-    },
-    exit: { 
-      opacity: 0, 
-      scale: 0.9,
-      transition: { duration: 0.2 }
-    }
-  };
-
-  // Generate shareable link
-  const generateShareLink = () => {
-    setShareModalOpen(true);
+  // Show share modal with loading animation
+  const handleShareClick = () => {
+    setIsShareLoading(true);
     
-    // Simulate network request delay
+    // Short delay before showing modal to indicate loading
     setTimeout(() => {
-      const dummyLink = `https://myresume.app/share/${Math.random().toString(36).substring(2, 10)}`;
-      setShareLink(dummyLink);
-    }, 1000);
+      setIsShareLoading(false);
+      setShareModalOpen(true);
+    }, 800);
   };
 
-  // Copy link to clipboard
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(shareLink);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  // Handle share link generation callback
+  const handleShareLink = (link) => {
+    setShareLink(link);
+    console.log("Generated share link:", link);
   };
 
   // File upload handler
@@ -168,6 +154,12 @@ const ResumeBuilder = () => {
   // Preview display and hide handlers
   const handleDisplayPreview = () => {
     setShowPreview(!showPreview);
+  };
+
+  // Handle download click
+  const handleDownloadClick = () => {
+    console.log("Downloading resume...");
+    // Add actual download logic here
   };
 
   return (
@@ -234,14 +226,14 @@ const ResumeBuilder = () => {
                 transition={{ duration: 0.5 }}
               >
                 {/* Section Navigation */}
-                <div className="flex flex-wrap border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750">
+                <div className="flex flex-wrap border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                   {sections.map(section => (
                     <motion.button
                       key={section.id}
                       className={`px-3 sm:px-5 py-4 flex items-center whitespace-nowrap ${
                         activeSection === section.id 
-                          ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-white dark:bg-gray-800' 
-                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                          ? 'dark:text-white' 
+                          : 'dark:text-white'
                       }`}
                       onClick={() => setActiveSection(section.id)}
                       whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
@@ -327,25 +319,42 @@ const ResumeBuilder = () => {
                         whileTap={{ scale: 0.95 }}
                         className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                         title="Download Resume"
-                        onClick={() => {
-                          setIsLoading(true);
-                          setTimeout(() => setIsLoading(false), 1000); // Simulate download
-                        }}
+                        onClick={handleDownloadClick}
                       >
-                        {isLoading ? (
-                          <LoadingSpinner size="small" />
-                        ) : (
-                          <Download size={18} />
-                        )}
+                        <Download size={18} />
                       </motion.button>
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
+                        className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 relative"
                         title="Share Resume"
-                        onClick={generateShareLink}
+                        onClick={handleShareClick}
+                        disabled={isShareLoading}
                       >
-                        <Share2 size={18} />
+                        {isShareLoading ? (
+                          <svg
+                            className="animate-spin w-5 h-5 text-blue-600 dark:text-blue-400"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        ) : (
+                          <Share2 size={18} />
+                        )}
                       </motion.button>
                     </div>
                   </div>
@@ -513,65 +522,14 @@ const ResumeBuilder = () => {
         )}
       </AnimatePresence>
       
-      {/* Share Modal with Blurred Background */}
+      {/* Share Modal Component */}
       <AnimatePresence>
         {shareModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30 backdrop-blur-sm p-4">
-            <motion.div 
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md"
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={modalAnimation}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                <h3 className="font-medium text-gray-900 dark:text-white">Share Your Resume</h3>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShareModalOpen(false)}
-                  className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-                >
-                  <X size={18} />
-                </motion.button>
-              </div>
-              
-              <div className="p-6">
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Share this link with others to give them access to your resume:
-                </p>
-                <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-md overflow-hidden">
-                  <input
-                    type="text"
-                    value={shareLink}
-                    readOnly
-                    className="flex-1 py-2 px-3 bg-transparent border-none focus:outline-none text-gray-700 dark:text-gray-200"
-                  />
-                  <button 
-                    className="p-2 text-blue-600 dark:text-blue-400 hover:bg-gray-200 dark:hover:bg-gray-600"
-                    onClick={copyToClipboard}
-                  >
-                    {copied ? <Check size={18} /> : <Copy size={18} />}
-                  </button>
-                </div>
-                <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                  {copied ? "Copied to clipboard!" : "Click the icon to copy link"}
-                </div>
-              </div>
-              
-              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-750 rounded-b-lg text-right">
-                <motion.button
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
-                  onClick={() => setShareModalOpen(false)}
-                >
-                  Close
-                </motion.button>
-              </div>
-            </motion.div>
-          </div>
+          <ShareModal 
+            isOpen={shareModalOpen}
+            onClose={() => setShareModalOpen(false)}
+            onShare={handleShareLink}
+          />
         )}
       </AnimatePresence>
       
@@ -579,7 +537,7 @@ const ResumeBuilder = () => {
       <AnimatePresence>
         {isFullscreen && (
           <div 
-            className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto" 
+            className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto"
             onClick={(e) => e.target === e.currentTarget && toggleFullscreenPreview()}
           >
             <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -589,10 +547,7 @@ const ResumeBuilder = () => {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => {
-                      setIsLoading(true);
-                      setTimeout(() => setIsLoading(false), 1000); // Simulate download
-                    }}
+                    onClick={handleDownloadClick}
                     className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-gray-800 rounded-full shadow"
                     title="Download Resume"
                   >
@@ -601,11 +556,34 @@ const ResumeBuilder = () => {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={generateShareLink}
+                    onClick={handleShareClick}
                     className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 bg-white dark:bg-gray-800 rounded-full shadow"
                     title="Share Resume"
                   >
-                    <Share2 size={20} />
+                    {isShareLoading ? (
+                      <svg
+                        className="animate-spin w-5 h-5 text-blue-600 dark:text-blue-400"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    ) : (
+                      <Share2 size={20} />
+                    )}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
@@ -635,11 +613,6 @@ const ResumeBuilder = () => {
           </div>
         )}
       </AnimatePresence>
-      
-      {/* Global Loading Overlay - Only for main operations, not for modal/preview toggling */}
-      {isLoading && !shareModalOpen && !fullscreenLoading && (
-        <LoadingSpinner fullScreen />
-      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -19,8 +19,11 @@ import Navbar from '../components/Shared/Navbar';
 import Sidebar from '../components/Shared/Sidebar';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [userData, setUserData] = useState({
+    fullName: '',
+    email: '',
+  });
 
   // Mock data for resumes
   const resumes = [
@@ -54,6 +57,27 @@ const Dashboard = () => {
     { title: 'Last Updated', value: '2 days ago', icon: <Clock size={24} /> },
   ];
 
+  const navigate = useNavigate();
+
+  const handleResumeBuilder = () => {
+    navigate('/resume-builder');
+  };
+
+  const handleCoverLetter = () => {
+    navigate('/cover-letter');
+  };
+
+  // Load user data from localStorage on component mount
+  useEffect(() => {
+    const storedUserData = localStorage.getItem('userData');
+    if (storedUserData) {
+      setUserData(JSON.parse(storedUserData));
+    }
+  }, []);
+
+  // Get first name for welcome message
+  const firstName = userData.fullName ? userData.fullName.split(' ')[0] : 'User';
+
   // Animations
   const containerAnimation = {
     hidden: { opacity: 0 },
@@ -81,7 +105,9 @@ const Dashboard = () => {
       
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Navbar 
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
+        />
         
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           <motion.div 
@@ -95,7 +121,7 @@ const Dashboard = () => {
               className="mb-8 bg-white dark:bg-gray-800 rounded-xl shadow p-6"
               variants={itemAnimation}
             >
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back, Alex!</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Welcome back, {firstName}!</h1>
               <p className="text-gray-600 dark:text-gray-300 mt-1">Here's a summary of your resume activities</p>
             </motion.div>
 
@@ -131,10 +157,10 @@ const Dashboard = () => {
               <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">My Resumes</h2>
                 <motion.button
+                  onClick={handleResumeBuilder}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                  onClick={() => navigate('/resume-builder')}
                 >
                   <Plus size={16} className="mr-1" />
                   Create New
@@ -167,7 +193,6 @@ const Dashboard = () => {
                           whileTap={{ scale: 0.9 }}
                           className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400"
                           title="Edit"
-                          onClick={() => navigate(`/resume-builder/${resume.id}`)}
                         >
                           <Edit size={18} />
                         </motion.button>
@@ -217,9 +242,9 @@ const Dashboard = () => {
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">AI Tools</h2>
                 <div className="space-y-4">
                   <motion.button
+                    onClick={handleCoverLetter}
                     whileHover={{ y: -2, transition: { duration: 0.2 } }}
                     className="w-full p-4 bg-blue-50 dark:bg-gray-700 rounded-lg text-left flex items-center justify-between"
-                    onClick={() => navigate('/cover-letter')}
                   >
                     <div className="flex items-center">
                       <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-full text-blue-600 dark:text-blue-400 mr-3">

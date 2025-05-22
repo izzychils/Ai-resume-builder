@@ -1,12 +1,18 @@
 import { useState, useRef, useEffect } from "react";
-import { Menu, User, Settings, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Menu, User, Settings, LogOut } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import LogoutConfirmation from "./LogoutConfirmation";
 
 const Navbar = ({ toggleSidebar }) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const navigate = useNavigate();
+  const [showLogoutConfirmation, setShowLogoutConfirmation] = useState(false);
+  const [userData, setUserData] = useState({
+    fullName: '',
+    email: '',
+  });
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   // Handle clicking outside to close the menu
   useEffect(() => {
@@ -22,10 +28,18 @@ const Navbar = ({ toggleSidebar }) => {
     };
   }, []);
 
+  // Load user data from localStorage on component mount
+  useEffect(() => {
+    const storedUserData = localStorage.getItem('userData');
+    if (storedUserData) {
+      setUserData(JSON.parse(storedUserData));
+    }
+  }, []);
+
   // Navigation handlers
   const navigateToProfile = () => {
     setUserMenuOpen(false);
-    navigate("/profile");
+    navigate("/settings");
   };
 
   const navigateToSettings = () => {
@@ -33,11 +47,22 @@ const Navbar = ({ toggleSidebar }) => {
     navigate("/settings");
   };
 
-  const handleLogout = () => {
-    // Add any logout logic here (clear tokens, user data, etc.)
-    localStorage.removeItem("authToken"); // Example
+  // Toggle logout confirmation
+  const handleLogoutClick = () => {
     setUserMenuOpen(false);
-    navigate("/login");
+    setShowLogoutConfirmation(true);
+  };
+
+  // Handle logout confirmation response
+  const handleLogoutConfirmation = (confirmed) => {
+    setShowLogoutConfirmation(false);
+    if (confirmed) {
+      // Clear user data and redirect to login would go here
+      localStorage.removeItem('userData');
+      localStorage.removeItem('authToken');
+      // In a real app, you'd redirect to login page
+      console.log('User logged out');
+    }
   };
 
   return (
@@ -82,8 +107,12 @@ const Navbar = ({ toggleSidebar }) => {
               {userMenuOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-1 z-10 border border-gray-200 dark:border-gray-700 animate-fadeIn">
                   <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">John Doe</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">john.doe@example.com</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                      {userData?.fullName || "User"}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {userData?.email || "user@example.com"}
+                    </p>
                   </div>
                   <button 
                     onClick={navigateToProfile}
@@ -101,7 +130,7 @@ const Navbar = ({ toggleSidebar }) => {
                   </button>
                   <div className="border-t border-gray-200 dark:border-gray-700 my-1"></div>
                   <button 
-                    onClick={handleLogout}
+                    onClick={handleLogoutClick}
                     className="flex w-full items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-150"
                   >
                     <LogOut size={16} className="mr-3" />
@@ -113,6 +142,11 @@ const Navbar = ({ toggleSidebar }) => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirmation && (
+        <LogoutConfirmation onConfirm={handleLogoutConfirmation} />
+      )}
     </nav>
   );
 };
