@@ -178,7 +178,7 @@ const Templates = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold mb-3 text-gray-800 dark:text-white flex items-center gap-2">
-              <span className=" bg-clip-text text-black">Resume Templates</span>
+              <span className=" bg-clip-text dark:text-white text-black">Resume Templates</span>
               {/* bg-gradient-to-r from-blue-600 to-indigo-600 */}
               {selectedTemplate && (
                 <span className="inline-flex items-center text-sm font-medium py-1 px-2 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 animate-fadeIn">
