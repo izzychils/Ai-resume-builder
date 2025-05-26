@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import Button from "../Shared/Button";
 import LoadingSpinner from "../Shared/LoadingSpinner";
+import ForgotPassword from "./ForgotPassword";
 
 const LoginForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,7 @@ const LoginForm = ({ onSubmit }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -88,6 +90,33 @@ const LoginForm = ({ onSubmit }) => {
       setIsLoading(false);
     }
   };
+
+  const handleForgotPasswordClick = (e) => {
+    e.preventDefault();
+    setShowForgotPassword(true);
+  };
+
+  const handleForgotPasswordBack = () => {
+    setShowForgotPassword(false);
+  };
+
+  const handleForgotPasswordSuccess = (data) => {
+    // Handle successful password change
+    console.log("Password changed successfully:", data);
+    // Show success message or redirect back to login
+    alert("Password changed successfully! Please log in with your new password.");
+    setShowForgotPassword(false);
+  };
+
+  if (showForgotPassword) {
+    return (
+      <ForgotPassword 
+        email={formData.email}
+        onBack={handleForgotPasswordBack}
+        onSuccess={handleForgotPasswordSuccess}
+      />
+    );
+  }
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit} noValidate>
@@ -168,7 +197,11 @@ const LoginForm = ({ onSubmit }) => {
         </div>
 
         <div className="text-sm">
-          <a href="#forgot-password" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300">
+          <a 
+            href="#forgot-password" 
+            onClick={handleForgotPasswordClick}
+            className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+          >
             Forgot your password?
           </a>
         </div>
@@ -181,7 +214,7 @@ const LoginForm = ({ onSubmit }) => {
           disabled={isLoading}
         >
           {isLoading ? (
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center w-full">
               <LoadingSpinner size="small" color="white" />
               <span className="ml-2">Signing in...</span>
             </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check } from "lucide-react";
 import Button from "../Shared/Button";
 import LoadingSpinner from "../Shared/LoadingSpinner";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +33,25 @@ const SignupForm = ({ onSubmit }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState(false);
 
+  // Password strength indicator function
+  const getPasswordStrength = (password) => {
+    let strength = 0;
+    const checks = [
+      password.length >= 8,
+      /[a-z]/.test(password),
+      /[A-Z]/.test(password),
+      /\d/.test(password),
+      /[^A-Za-z0-9]/.test(password)
+    ];
+    
+    strength = checks.filter(Boolean).length;
+    
+    if (strength <= 2) return { label: 'Weak', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-200 dark:bg-red-900' };
+    if (strength <= 3) return { label: 'Fair', color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-200 dark:bg-yellow-900' };
+    if (strength <= 4) return { label: 'Good', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-200 dark:bg-blue-900' };
+    return { label: 'Strong', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-200 dark:bg-green-900' };
+  };
+
   const validate = (name, value) => {
     let errorMessage = "";
     
@@ -56,6 +75,8 @@ const SignupForm = ({ onSubmit }) => {
           errorMessage = "Password is required";
         } else if (value.length < 8) {
           errorMessage = "Password must be at least 8 characters";
+        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
+          errorMessage = "Password must contain uppercase, lowercase, and number";
         }
         break;
         
@@ -184,6 +205,8 @@ const SignupForm = ({ onSubmit }) => {
     }
   };
 
+  const passwordStrength = formData.password ? getPasswordStrength(formData.password) : null;
+
   return (
     <form className="space-y-6" onSubmit={handleSubmit} noValidate>
       <div className="space-y-4 rounded-md">
@@ -257,8 +280,53 @@ const SignupForm = ({ onSubmit }) => {
               )}
             </button>
           </div>
+          
+          {/* Password Strength Indicator */}
+          {formData.password && passwordStrength && (
+            <div className="mt-2">
+              <div className="flex items-center space-x-2">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-200 ${passwordStrength.bg}`}
+                    style={{ width: `${(passwordStrength.label === 'Weak' ? 20 : 
+                                      passwordStrength.label === 'Fair' ? 40 : 
+                                      passwordStrength.label === 'Good' ? 70 : 100)}%` }}
+                  />
+                </div>
+                <span className={`text-xs font-medium ${passwordStrength.color}`}>
+                  {passwordStrength.label}
+                </span>
+              </div>
+            </div>
+          )}
+          
           {errors.password && touched.password && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password}</p>
+          )}
+          
+          {/* Password Requirements */}
+          {formData.password && (
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              <p>Password must contain:</p>
+              <ul className="mt-1 space-y-1">
+                <li className={`flex items-center space-x-1 ${formData.password.length >= 8 ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  {formData.password.length >= 8 ? <Check className="h-3 w-3" /> : <span className="w-3 h-3 rounded-full border border-gray-300" />}
+                  <span>At least 8 characters</span>
+                </li>
+                <li className={`flex items-center space-x-1 ${/[A-Z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  {/[A-Z]/.test(formData.password) ? <Check className="h-3 w-3" /> : <span className="w-3 h-3 rounded-full border border-gray-300" />}
+                  <span>One uppercase letter</span>
+                </li>
+                <li className={`flex items-center space-x-1 ${/[a-z]/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  {/[a-z]/.test(formData.password) ? <Check className="h-3 w-3" /> : <span className="w-3 h-3 rounded-full border border-gray-300" />}
+                  <span>One lowercase letter</span>
+                </li>
+                <li className={`flex items-center space-x-1 ${/\d/.test(formData.password) ? 'text-green-600 dark:text-green-400' : ''}`}>
+                  {/\d/.test(formData.password) ? <Check className="h-3 w-3" /> : <span className="w-3 h-3 rounded-full border border-gray-300" />}
+                  <span>One number</span>
+                </li>
+              </ul>
+            </div>
           )}
         </div>
         
@@ -321,7 +389,7 @@ const SignupForm = ({ onSubmit }) => {
           disabled={isLoading}
         >
           {isLoading ? (
-            <div className="flex items-center justify-center">
+            <div className="flex items-center justify-center w-full">
               <LoadingSpinner size="small" color="white" />
               <span className="ml-2">Creating account...</span>
             </div>

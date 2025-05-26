@@ -145,7 +145,7 @@ const Resumes = () => {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="mt-4 md:mt-0 flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+                className="mt-4 md:mt-0 flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md w-full md:w-auto"
                 onClick={() => navigate('/resume-builder')}
               >
                 <Plus size={16} className="mr-1" />
@@ -158,7 +158,7 @@ const Resumes = () => {
               className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-6"
               variants={itemAnimation}
             >
-              <div className="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
+              <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:space-x-4">
                 <div className="relative flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search size={18} className="text-gray-400" />
@@ -171,14 +171,14 @@ const Resumes = () => {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <div className="relative">
                     <button
                       onClick={() => setFilterOpen(!filterOpen)}
-                      className="flex items-center space-x-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                      className="flex items-center justify-center space-x-1 px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 w-full sm:w-auto"
                     >
                       <Filter size={16} />
-                      <span>Template: {filterTemplate === 'all' ? 'All' : filterTemplate}</span>
+                      <span className="truncate">Template: {filterTemplate === 'all' ? 'All' : filterTemplate}</span>
                       <ChevronDown size={16} />
                     </button>
                     {filterOpen && (
@@ -204,7 +204,7 @@ const Resumes = () => {
                     )}
                   </div>
                   <select
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 w-full sm:w-auto"
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                   >
@@ -244,10 +244,11 @@ const Resumes = () => {
                   {filteredResumes.map((resume) => (
                     <motion.div 
                       key={resume.id}
-                      className="p-6 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                      className="p-4 md:p-6 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
                       whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.03)' }}
                     >
-                      <div className="flex items-center justify-between">
+                      {/* Desktop Layout */}
+                      <div className="hidden md:flex items-center justify-between">
                         <div className="flex items-center space-x-4">
                           <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
                             <FileText size={20} className="text-gray-600 dark:text-gray-300" />
@@ -297,7 +298,75 @@ const Resumes = () => {
                           </motion.button>
                         </div>
                       </div>
-                      <div className="mt-3 pl-12">
+
+                      {/* Mobile Layout */}
+                      <div className="md:hidden space-y-4">
+                        {/* Resume Info */}
+                        <div className="flex items-start space-x-3">
+                          <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg flex-shrink-0">
+                            <FileText size={20} className="text-gray-600 dark:text-gray-300" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-gray-900 dark:text-white truncate">{resume.title}</h3>
+                            <div className="text-sm text-gray-500 dark:text-gray-400 space-y-1">
+                              <p>Template: {resume.template}</p>
+                              <p>Last modified: {resume.lastModified}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Applications Badge */}
+                        <div className="flex justify-start">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            resume.jobApplications > 0 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                              : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                          }`}>
+                            {resume.jobApplications} Application{resume.jobApplications !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-4 gap-2">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                            onClick={() => navigate(`/resume-builder/${resume.id}`)}
+                          >
+                            <Edit size={18} />
+                            <span className="text-xs mt-1">Edit</span>
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                          >
+                            <Download size={18} />
+                            <span className="text-xs mt-1">Download</span>
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                          >
+                            <Share2 size={18} />
+                            <span className="text-xs mt-1">Share</span>
+                          </motion.button>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="flex flex-col items-center justify-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            onClick={() => confirmDelete(resume.id, resume.title)}
+                          >
+                            <Trash2 size={18} />
+                            <span className="text-xs mt-1">Delete</span>
+                          </motion.button>
+                        </div>
+                      </div>
+
+                      {/* Applications badge for desktop */}
+                      <div className="hidden md:block mt-3 pl-12">
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           resume.jobApplications > 0 
                             ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 

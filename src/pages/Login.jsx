@@ -1,27 +1,27 @@
-import { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { useTheme } from '../context/ThemeContext';
+// import { useTheme } from '../context/ThemeContext';
 import LoginForm from '../components/Auth/LoginForm';
 import SignupForm from '../components/Auth/SignupForm';
-import LoadingSpinner from '../components/Shared/LoadingSpinner';
+// import LoadingSpinner from '../components/Shared/LoadingSpinner';
 
-const Login = ({ onLogin }) => {
-  const { darkMode } = useTheme();
+const Login = ({ onLogin, onClose }) => {
+  // const { darkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isPageLoading, setIsPageLoading] = useState(true);
+  // const [isPageLoading, setIsPageLoading] = useState(true);
   
   const isLoginPath = location.pathname === '/login';
   
-  useEffect(() => {
-    // Simulate initial page load
-    const timer = setTimeout(() => {
-      setIsPageLoading(false);
-    }, 800);
+  // useEffect(() => {
+  //   // Simulate initial page load
+  //   const timer = setTimeout(() => {
+  //     setIsPageLoading(false);
+  //   }, 800);
     
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
   
   const handleSubmit = (formData) => {
     console.log('Form submitted:', formData);
@@ -32,22 +32,54 @@ const Login = ({ onLogin }) => {
     // Redirect to dashboard
     navigate('/dashboard');
   };
+
+  const handleClose = () => {
+    if (onClose) {
+      onClose();
+    } else {
+      // Fallback navigation if no onClose prop provided
+      navigate('/'); // Go back to previous page
+    }
+  };
   
-  if (isPageLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-        <div className="text-center">
-          <LoadingSpinner size="large" color={darkMode ? "white" : "primary"} />
-          <p className="mt-4 text-gray-600 dark:text-gray-300 text-lg">
-            Loading {isLoginPath ? "Login" : "Signup"}...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // if (isPageLoading) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center ml-20 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+  //       <div className="text-center">
+  //         <LoadingSpinner size="large" color={darkMode ? "white" : "primary"} />
+  //         <p className="mt-4 text-gray-600 dark:text-gray-300 text-lg">
+  //           Loading {isLoginPath ? "Login" : "Signup"}...
+  //         </p>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200 relative">
+      {/* Close button */}
+      <button
+        onClick={handleClose}
+        className="absolute top-4 right-4 p-2 rounded-full bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl 
+                   text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 
+                   transition-all duration-200 hover:scale-105 z-10"
+        aria-label="Close login page"
+      >
+        <svg 
+          className="h-6 w-6" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2} 
+            d="M6 18L18 6M6 6l12 12" 
+          />
+        </svg>
+      </button>
+
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">

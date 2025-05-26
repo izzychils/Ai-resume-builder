@@ -14,6 +14,13 @@ const CoverLetter = () => {
     keyPoints: '',
   });
   
+  const [errors, setErrors] = useState({
+    fullName: '',
+    jobTitle: '',
+    companyName: '',
+    keyPoints: '',
+  });
+  
   const [generatedLetter, setGeneratedLetter] = useState('');
   const [completeLetter, setCompleteLetter] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -30,6 +37,33 @@ const CoverLetter = () => {
       ...prev,
       [name]: value,
     }));
+    
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }));
+    }
+  };
+  
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Full name is required';
+    }
+    
+    if (!formData.jobTitle.trim()) {
+      newErrors.jobTitle = 'Job title is required';
+    }
+    
+    if (!formData.companyName.trim()) {
+      newErrors.companyName = 'Company name is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
   
   // Effect to handle the word-by-word generation
@@ -60,6 +94,11 @@ const CoverLetter = () => {
   
   const handleGenerate = (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsGenerating(true);
     setGeneratedLetter('');
     setGenerationProgress(0);
@@ -100,6 +139,10 @@ ${formData.fullName}`;
   };
   
   const handleRegenerate = () => {
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsGenerating(true);
     setGeneratedLetter('');
     setGenerationProgress(0);
@@ -152,11 +195,14 @@ ${formData.fullName}`;
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleInputChange}
-                      required
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                      className={`w-full px-4 py-2 border rounded-md 
                                 focus:ring-blue-500 focus:border-blue-500 
-                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                ${errors.fullName ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                     />
+                    {errors.fullName && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.fullName}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -169,12 +215,15 @@ ${formData.fullName}`;
                       name="jobTitle"
                       value={formData.jobTitle}
                       onChange={handleInputChange}
-                      required
                       placeholder="e.g. Frontend Developer"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                      className={`w-full px-4 py-2 border rounded-md 
                                 focus:ring-blue-500 focus:border-blue-500 
-                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                ${errors.jobTitle ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                     />
+                    {errors.jobTitle && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.jobTitle}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -187,12 +236,15 @@ ${formData.fullName}`;
                       name="companyName"
                       value={formData.companyName}
                       onChange={handleInputChange}
-                      required
                       placeholder="e.g. Acme Inc."
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md 
+                      className={`w-full px-4 py-2 border rounded-md 
                                 focus:ring-blue-500 focus:border-blue-500 
-                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100
+                                ${errors.companyName ? 'border-red-500 dark:border-red-400' : 'border-gray-300 dark:border-gray-600'}`}
                     />
+                    {errors.companyName && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.companyName}</p>
+                    )}
                   </div>
                   
                   <div>
@@ -286,7 +338,7 @@ ${formData.fullName}`;
                   </div>
                 </div>
                 
-                <div className="whitespace-pre-line bg-gray-50 dark:bg-gray-700 p-6 rounded-md h-146 overflow-y-auto
+                <div className="whitespace-pre-line bg-gray-50 dark:bg-gray-700 p-6 rounded-md h-166 overflow-y-auto
                               text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
                   {isGenerating && generatedLetter === '' ? (
                     <div className="flex items-center justify-center h-full">

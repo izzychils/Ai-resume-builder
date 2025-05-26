@@ -80,9 +80,9 @@ const Navbar = ({ toggleSidebar }) => {
               <Menu size={20} />
             </button>
             <div className="flex items-center ml-3 md:ml-0">
-              <div className="h-8 w-8 bg-blue-600 rounded-md flex items-center justify-center mr-2">
+              {/* <div className="h-8 w-8 bg-blue-600 rounded-md flex items-center justify-center mr-2">
                 <span className="text-white font-bold">R</span>
-              </div>
+              </div> */}
               <span className="font-bold text-xl md:text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 AI Resume Builder
               </span>

@@ -384,13 +384,13 @@ const Templates = () => {
                           </>
                         )}
                       </button>
-                      <button
+                      {/* <button
                         onClick={() => handlePreviewTemplate(template.id)}
                         className="flex items-center justify-center aspect-square p-2 rounded-md border border-gray-300 dark:border-gray-600 transition-colors duration-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                         aria-label="Preview template"
                       >
                         <Search size={18} />
-                      </button>
+                      </button> */}
                     </div>
                   </div>
                   
