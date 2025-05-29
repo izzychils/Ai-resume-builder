@@ -1,27 +1,15 @@
-// import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-// import { useTheme } from '../context/ThemeContext';
+import { useAuthStore } from '../components/Auth/useAuthStore'; // Adjust path as needed
 import LoginForm from '../components/Auth/LoginForm';
 import SignupForm from '../components/Auth/SignupForm';
-// import LoadingSpinner from '../components/Shared/LoadingSpinner';
 
 const Login = ({ onLogin, onClose }) => {
-  // const { darkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  // const [isPageLoading, setIsPageLoading] = useState(true);
+  const { signInWithGoogle, loading, error } = useAuthStore();
   
   const isLoginPath = location.pathname === '/login';
-  
-  // useEffect(() => {
-  //   // Simulate initial page load
-  //   const timer = setTimeout(() => {
-  //     setIsPageLoading(false);
-  //   }, 800);
-    
-  //   return () => clearTimeout(timer);
-  // }, []);
   
   const handleSubmit = (formData) => {
     console.log('Form submitted:', formData);
@@ -38,22 +26,49 @@ const Login = ({ onLogin, onClose }) => {
       onClose();
     } else {
       // Fallback navigation if no onClose prop provided
-      navigate('/'); // Go back to previous page
+      navigate('/');
     }
   };
-  
-  // if (isPageLoading) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center ml-20 bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-  //       <div className="text-center">
-  //         <LoadingSpinner size="large" color={darkMode ? "white" : "primary"} />
-  //         <p className="mt-4 text-gray-600 dark:text-gray-300 text-lg">
-  //           Loading {isLoginPath ? "Login" : "Signup"}...
-  //         </p>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const user = await signInWithGoogle();
+      
+      if (user) {
+        // Send user data to your backend
+        const response = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            emailVerified: user.emailVerified,
+          }),
+        });
+
+        if (response.ok) {
+          const backendData = await response.json();
+          console.log('Backend response:', backendData);
+          
+          // Call onLogin if provided
+          if (onLogin) {
+            onLogin();
+          }
+          
+          // Redirect to dashboard
+          navigate('/dashboard');
+        } else {
+          console.error('Backend authentication failed');
+        }
+      }
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-200 relative">
@@ -103,6 +118,13 @@ const Login = ({ onLogin, onClose }) => {
             <SignupForm onSubmit={handleSubmit} />
           )}
           
+          {/* Error message */}
+          {error && (
+            <div className="mt-4 p-3 bg-red-100 dark:bg-red-900/20 border border-red-300 dark:border-red-700 rounded-md">
+              <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
+            </div>
+          )}
+          
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
@@ -110,47 +132,44 @@ const Login = ({ onLogin, onClose }) => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
-                  Or continue with
+                  Or 
                 </span>
               </div>
             </div>
             
-            <div className="mt-6 grid grid-cols-3 gap-3">
-              {/* Social login buttons */}
+            {/* Google Sign In Button */}
+            <div className="mt-6">
               <button
-                className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 
+                onClick={handleGoogleSignIn}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 dark:border-gray-600 
                          rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 
-                         hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                         hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V19c0 .27.16.59.67.5C17.14 18.16 20 14.42 20 10A10 10 0 0010 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <button
-                className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 
-                         rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 
-                         hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-              >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path d="M6.29 18.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0020 3.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.073 4.073 0 01.8 7.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 010 16.407a11.616 11.616 0 006.29 1.84" />
-                </svg>
-              </button>
-              <button
-                className="w-full flex items-center justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 
-                         rounded-md shadow-sm bg-white dark:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 
-                         hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-              >
-                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                  <path
-                    fillRule="evenodd"
-                    d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V19c0 .27.16.59.67.5C17.14 18.16 20 14.42 20 10A10 10 0 0010 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <span>Continue with Google</span>
+                {loading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-900 dark:border-white"></div>
+                ) : (
+                  <svg className="h-5 w-5" viewBox="0 0 24 24">
+                    <path
+                      fill="#4285F4"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                    />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                    />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
