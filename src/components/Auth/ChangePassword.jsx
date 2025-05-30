@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Eye, EyeOff, ArrowLeft, Check } from "lucide-react";
 import Button from "../Shared/Button";
 import LoadingSpinner from "../Shared/LoadingSpinner";
+import ApiService from "../Auth/ApiService"; // Updated import path
 
-const ChangePassword = ({ email, token, onBack, onSuccess }) => {
+const ChangePassword = ({ email, code, onBack, onSuccess }) => {
   const [formData, setFormData] = useState({
     newPassword: "",
     confirmPassword: ""
@@ -84,34 +85,41 @@ const ChangePassword = ({ email, token, onBack, onSuccess }) => {
     setErrors({ newPassword: "", confirmPassword: "", general: "" });
     
     try {
-      // Call your backend API to change password
-      const response = await fetch('/api/reset-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email,
-          token,
-          newPassword: formData.newPassword
-        }),
-      });
+      // Call backend API to reset password (combines verify + reset)
+      const response = await ApiService.resetPassword(
+        email,
+        code,
+        formData.newPassword
+      );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to reset password');
-      }
-
-      // Call success callback
+      console.log('Password reset successful:', response);
+      
+      // Call success callback with response data
       if (onSuccess) {
-        onSuccess({ email, message: 'Password changed successfully' });
+        onSuccess({ 
+          email, 
+          message: response.message || 'Password changed successfully',
+          data: response
+        });
       }
     } catch (error) {
+      console.error('Password reset error:', error);
+      
+      // Handle specific error cases
+      let errorMessage = 'Failed to change password. Please try again.';
+      
+      if (error.message.includes('Invalid or expired')) {
+        errorMessage = 'Reset code is invalid or expired. Please request a new code.';
+      } else if (error.message.includes('User not found')) {
+        errorMessage = 'User account not found. Please check your email address.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       setErrors({
         ...errors,
-        general: error.message || 'Failed to change password. Please try again.'
+        general: errorMessage
       });
-      console.error('Change password error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -144,11 +152,12 @@ const ChangePassword = ({ email, token, onBack, onSuccess }) => {
         <button
           onClick={onBack}
           className="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+          disabled={isLoading}
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Change Password
+          Create New Password
         </h2>
       </div>
 
@@ -175,15 +184,17 @@ const ChangePassword = ({ email, token, onBack, onSuccess }) => {
               value={formData.newPassword}
               onChange={handleChange}
               onBlur={() => isSubmitted && validateForm()}
+              disabled={isLoading}
               className={`block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${
                 errors.newPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:text-white pr-10`}
+              } rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:text-white pr-10 disabled:opacity-50 disabled:cursor-not-allowed`}
               placeholder="Enter new password"
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none disabled:opacity-50"
               onClick={() => togglePasswordVisibility('new')}
+              disabled={isLoading}
               tabIndex="-1"
             >
               {showNewPassword ? (
@@ -201,9 +212,9 @@ const ChangePassword = ({ email, token, onBack, onSuccess }) => {
                 <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                   <div 
                     className={`h-2 rounded-full transition-all duration-200 ${passwordStrength.bg}`}
-                    style={{ width: `${(getPasswordStrength(formData.newPassword).label === 'Weak' ? 20 : 
-                                      getPasswordStrength(formData.newPassword).label === 'Fair' ? 40 : 
-                                      getPasswordStrength(formData.newPassword).label === 'Good' ? 70 : 100)}%` }}
+                    style={{ width: `${(passwordStrength.label === 'Weak' ? 20 : 
+                                      passwordStrength.label === 'Fair' ? 40 : 
+                                      passwordStrength.label === 'Good' ? 70 : 100)}%` }}
                   />
                 </div>
                 <span className={`text-xs font-medium ${passwordStrength.color}`}>
@@ -253,15 +264,17 @@ const ChangePassword = ({ email, token, onBack, onSuccess }) => {
               value={formData.confirmPassword}
               onChange={handleChange}
               onBlur={() => isSubmitted && validateForm()}
+              disabled={isLoading}
               className={`block w-full px-3 py-2 bg-white dark:bg-gray-700 border ${
                 errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-              } rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:text-white pr-10`}
+              } rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:text-white pr-10 disabled:opacity-50 disabled:cursor-not-allowed`}
               placeholder="Confirm new password"
             />
             <button
               type="button"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none disabled:opacity-50"
               onClick={() => togglePasswordVisibility('confirm')}
+              disabled={isLoading}
               tabIndex="-1"
             >
               {showConfirmPassword ? (
@@ -276,6 +289,12 @@ const ChangePassword = ({ email, token, onBack, onSuccess }) => {
           )}
         </div>
 
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            <strong>Note:</strong> This will immediately reset your password using the code sent to your email.
+          </p>
+        </div>
+
         <Button 
           type="submit" 
           fullWidth={true} 
@@ -284,10 +303,10 @@ const ChangePassword = ({ email, token, onBack, onSuccess }) => {
           {isLoading ? (
             <div className="flex items-center justify-center w-full">
               <LoadingSpinner size="small" color="white" />
-              <span className="ml-2">Changing Password...</span>
+              <span className="ml-2">Updating Password...</span>
             </div>
           ) : (
-            "Change Password"
+            "Update Password"
           )}
         </Button>
       </form>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff, Check } from "lucide-react";
 import Button from "../Shared/Button";
 import LoadingSpinner from "../Shared/LoadingSpinner";
+import ApiService from "../Auth/ApiService";
 import { useNavigate } from "react-router-dom";
 
 const SignupForm = ({ onSubmit }) => {
@@ -20,6 +21,7 @@ const SignupForm = ({ onSubmit }) => {
     password: "",
     confirmPassword: "",
     agreeTerms: "",
+    general: ""
   });
   
   const [touched, setTouched] = useState({
@@ -110,6 +112,15 @@ const SignupForm = ({ onSubmit }) => {
       [name]: newValue,
     });
     
+    // Clear errors when user starts typing
+    if (errors[name]) {
+      setErrors({
+        ...errors,
+        [name]: "",
+        general: ""
+      });
+    }
+    
     // Validate on change if the field has been touched
     if (touched[name]) {
       setErrors({
@@ -139,16 +150,18 @@ const SignupForm = ({ onSubmit }) => {
   };
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors = { general: "" };
     let isValid = true;
     
     // Validate all fields
     Object.keys(formData).forEach(key => {
-      const errorMessage = validate(key, formData[key]);
-      newErrors[key] = errorMessage;
-      
-      if (errorMessage) {
-        isValid = false;
+      if (key !== 'general') {
+        const errorMessage = validate(key, formData[key]);
+        newErrors[key] = errorMessage;
+        
+        if (errorMessage) {
+          isValid = false;
+        }
       }
     });
     
@@ -174,32 +187,69 @@ const SignupForm = ({ onSubmit }) => {
     }
     
     setIsLoading(true);
+    setErrors({ fullName: "", email: "", password: "", confirmPassword: "", agreeTerms: "", general: "" });
     
     try {
-      // Store user data in localStorage (excluding password)
-      const userData = {
+      // Use ApiService for registration
+      const data = await ApiService.register({
         fullName: formData.fullName,
-        email: formData.email
-      };
+        email: formData.email,
+        password: formData.password
+      });
       
-      localStorage.setItem('userData', JSON.stringify(userData));
-      
-      // Create a mock auth token
-      localStorage.setItem('authToken', 'mock-auth-token-' + Date.now());
-      
-      // Simulate API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Call the onSubmit prop function passed from the parent component
-      if (onSubmit) {
-        onSubmit(formData);
+      // Store the auth token
+      if (data.access_token) {
+        localStorage.setItem('authToken', data.access_token);
+        console.log('Auth token stored:', data.access_token);
       }
       
-      // Navigate to dashboard after successful signup
+      // Store user data if available
+      if (data.user) {
+        console.log('User data:', data.user);
+        localStorage.setItem('userData', JSON.stringify(data.user));
+      }
+      
+      console.log("Registration successful:", data);
+      
+      // Call the onSubmit prop function if provided
+      if (onSubmit) {
+        onSubmit({ ...formData, authToken: data.access_token, user: data.user });
+      }
+      
+      // Navigate to dashboard or show success message
+      alert('Account created successfully! Redirecting to dashboard...');
       navigate('/dashboard');
       
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("Registration error:", error);
+      
+      // Handle specific error cases
+      if (error.message.includes('Email already exists') || error.message.includes('Email already registered')) {
+        setErrors({
+          ...errors,
+          email: "An account with this email already exists."
+        });
+      } else if (error.message.includes('Invalid email')) {
+        setErrors({
+          ...errors,
+          email: "Please enter a valid email address."
+        });
+      } else if (error.message.includes('Password too weak')) {
+        setErrors({
+          ...errors,
+          password: "Password does not meet security requirements."
+        });
+      } else if (error.message.includes('Full name') || error.message.includes('Name')) {
+        setErrors({
+          ...errors,
+          fullName: "Please enter a valid full name."
+        });
+      } else {
+        setErrors({
+          ...errors,
+          general: "Account creation failed. Please try again later."
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -209,6 +259,13 @@ const SignupForm = ({ onSubmit }) => {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+      {/* General error message */}
+      {errors.general && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+          <p className="text-sm text-red-600 dark:text-red-400">{errors.general}</p>
+        </div>
+      )}
+
       <div className="space-y-4 rounded-md">
         <div>
           <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
