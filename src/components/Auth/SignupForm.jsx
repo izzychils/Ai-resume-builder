@@ -217,7 +217,9 @@ const SignupForm = ({ onSubmit }) => {
       }
       
       // Navigate to dashboard or show success message
-      alert('Account created successfully! Redirecting to dashboard...');
+
+      // alert('Account created successfully! Redirecting to dashboard...');
+
       navigate('/dashboard');
       
     } catch (error) {

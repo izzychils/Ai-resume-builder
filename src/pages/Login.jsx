@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-// import { useEffect } from 'react';
-import { useAuthStore } from '../components/Auth/useAuthStore'; // Adjust path as needed
+import { useAuthStore } from '../components/Auth/useAuthStore'; 
 import LoginForm from '../components/Auth/LoginForm';
 import SignupForm from '../components/Auth/SignupForm';
 

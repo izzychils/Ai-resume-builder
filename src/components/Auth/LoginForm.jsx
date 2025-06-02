@@ -105,7 +105,7 @@ const LoginForm = ({ onSubmit }) => {
       }
       
       // In a real app, you would navigate to dashboard here
-      alert('Login successful! Redirecting to dashboard...');
+      // alert('Login successful! Redirecting to dashboard...');
       
     } catch (error) {
       console.error("Login error:", error);
