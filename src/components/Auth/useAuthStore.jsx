@@ -9,18 +9,23 @@ export const useAuthStore = create((set, get) => ({
   
   signInWithGoogle: async () => {
     try {
-      set({ loading: true, error: null })
-      const provider = new GoogleAuthProvider()
-      const result = await signInWithPopup(auth, provider)
-      // Don't set user here - let onAuthStateChanged handle it
-      set({ loading: false })
-      return result.user
+      set({ loading: true, error: null });
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      // Let onAuthStateChanged handle setting the user
+      set({ loading: false });
+      return result.user;
     } catch (error) {
-      set({ error: error.message, loading: false })
-      return null
+      if (error.code === "auth/popup-closed-by-user") {
+        console.warn("User closed the popup, silently ignoring.");
+        set({ loading: false }); // Do not set error
+        return null;
+      }
+      set({ error: error.message, loading: false });
+      return null;
     }
   },
-  
+
   logout: async () => {
     try {
       set({ loading: true })
@@ -33,6 +38,12 @@ export const useAuthStore = create((set, get) => ({
   },
   
   setUser: (firebase_user) => set({ firebase_user, loading: false }),
+  
+  // Add the missing clearError function
+  clearError: () => set({ error: null }),
+  
+  // Add a function to set error manually if needed
+  setError: (error) => set({ error }),
   
   isVerified: () => {
     const user = get().firebase_user
@@ -50,6 +61,16 @@ export const useAuthStore = create((set, get) => ({
       })
     })
     return unsubscribe
+  },
+
+  // Get current auth state
+  getCurrentUser: () => {
+    return get().firebase_user
+  },
+
+  // Check if user is authenticated
+  isAuthenticated: () => {
+    return !!get().firebase_user
   }
 }))
 

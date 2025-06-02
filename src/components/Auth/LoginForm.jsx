@@ -3,6 +3,7 @@ import { Eye, EyeOff } from "lucide-react";
 import Button from "../Shared/Button";
 import LoadingSpinner from "../Shared/LoadingSpinner";
 import ForgotPassword from "./ForgotPassword";
+import ApiService from "../Auth/ApiService";
 
 const LoginForm = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -12,7 +13,8 @@ const LoginForm = ({ onSubmit }) => {
   });
   const [errors, setErrors] = useState({
     email: "",
-    password: ""
+    password: "",
+    general: ""
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -26,11 +28,12 @@ const LoginForm = ({ onSubmit }) => {
       [name]: type === "checkbox" ? checked : value,
     });
     
-    // Clear error when user starts typing
+    // Clear errors when user starts typing
     if (errors[name]) {
       setErrors({
         ...errors,
-        [name]: ""
+        [name]: "",
+        general: ""
       });
     }
   };
@@ -41,7 +44,7 @@ const LoginForm = ({ onSubmit }) => {
 
   const validateForm = () => {
     let valid = true;
-    const newErrors = { email: "", password: "" };
+    const newErrors = { email: "", password: "", general: "" };
     
     // Email validation
     if (!formData.email.trim()) {
@@ -74,18 +77,56 @@ const LoginForm = ({ onSubmit }) => {
     }
     
     setIsLoading(true);
-    console.log("Login form submitted:", formData);
+    setErrors({ email: "", password: "", general: "" });
     
     try {
-      // Simulate API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use ApiService for login
+      const data = await ApiService.login({
+        email: formData.email,
+        password: formData.password
+      });
       
-      // Call the onSubmit prop function passed from the parent component
-      if (onSubmit) {
-        onSubmit(formData);
+      // Store the auth token
+      if (data.access_token) {
+        localStorage.setItem('authToken', data.access_token);
+        console.log('Auth token stored:', data.access_token);
       }
+      
+      // Store user data if available
+      if (data.user) {
+        console.log('User data:', data.user);
+      }
+      
+      console.log("Login successful:", data);
+      
+      // Call the onSubmit prop function if provided
+      if (onSubmit) {
+        onSubmit({ ...formData, authToken: data.access_token });
+      }
+      
+      // In a real app, you would navigate to dashboard here
+      // alert('Login successful! Redirecting to dashboard...');
+      
     } catch (error) {
       console.error("Login error:", error);
+      
+      // Handle specific error cases
+      if (error.message.includes('Invalid credentials')) {
+        setErrors({
+          ...errors,
+          general: "Invalid email or password. Please try again."
+        });
+      } else if (error.message.includes('Email not found')) {
+        setErrors({
+          ...errors,
+          email: "No account found with this email address."
+        });
+      } else {
+        setErrors({
+          ...errors,
+          general: "Login failed. Please try again later."
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -101,9 +142,7 @@ const LoginForm = ({ onSubmit }) => {
   };
 
   const handleForgotPasswordSuccess = (data) => {
-    // Handle successful password change
     console.log("Password changed successfully:", data);
-    // Show success message or redirect back to login
     alert("Password changed successfully! Please log in with your new password.");
     setShowForgotPassword(false);
   };
@@ -120,6 +159,13 @@ const LoginForm = ({ onSubmit }) => {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+      {/* General error message */}
+      {errors.general && (
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md p-3">
+          <p className="text-sm text-red-600 dark:text-red-400">{errors.general}</p>
+        </div>
+      )}
+
       <div className="space-y-4 rounded-md">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">

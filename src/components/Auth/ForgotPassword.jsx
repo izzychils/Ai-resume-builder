@@ -3,6 +3,7 @@ import { ExternalLink, ArrowLeft } from "lucide-react";
 import Button from "../Shared/Button";
 import LoadingSpinner from "../Shared/LoadingSpinner";
 import ChangePassword from "./ChangePassword";
+import ApiService from "../Auth/ApiService";
 
 const ForgotPassword = ({ email, onBack, onSuccess }) => {
   const [emailSent, setEmailSent] = useState(false);
@@ -12,20 +13,20 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
   const [isVerifying, setIsVerifying] = useState(false);
   const [error, setError] = useState("");
   const [showChangePassword, setShowChangePassword] = useState(false);
-  const [resetToken, setResetToken] = useState("");
+  const [isCodeValid, setIsCodeValid] = useState(false);
   
   const inputRefs = useRef([]);
 
-  // Countdown timer effect - starts immediately
+  // Countdown timer effect - starts when email is sent
   useEffect(() => {
-    if (timeLeft > 0) {
+    if (emailSent && timeLeft > 0) {
       const timer = setInterval(() => {
         setTimeLeft(prev => prev - 1);
       }, 1000);
       
       return () => clearInterval(timer);
     }
-  }, [timeLeft]);
+  }, [emailSent, timeLeft]);
 
   // Format time display
   const formatTime = (seconds) => {
@@ -36,7 +37,7 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
 
   const handleSendCode = async () => {
     if (!email.trim() || !/\S+@\S+\.\S+/.test(email)) {
-      setError("Invalid email address");
+      setError("Please provide a valid email address");
       return;
     }
 
@@ -44,24 +45,20 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
     setError("");
 
     try {
-      // Call your backend API to send reset email
-      const response = await fetch('/api/forgot-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send reset email');
-      }
-
+      // Call backend API to send reset email
+      const response = await ApiService.sendPasswordResetCode(email);
+      
+      console.log('Password reset code sent:', response);
       setEmailSent(true);
       setTimeLeft(1200); // Reset timer to 20 minutes
+      
+      // Show success message if provided by backend
+      if (response.message) {
+        console.log(response.message);
+      }
     } catch (error) {
-      setError('Failed to send reset email. Please try again.');
-      console.error('Forgot password error:', error);
+      console.error('Send reset code error:', error);
+      setError(error.message || 'Failed to send reset email. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -69,8 +66,10 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
 
   // Auto-send code when component mounts
   useEffect(() => {
-    handleSendCode();
-  }, []);
+    if (email && !emailSent) {
+      handleSendCode();
+    }
+  }, [email]);
 
   const handleCodeChange = (index, value) => {
     // Only allow digits
@@ -107,34 +106,21 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
     setError("");
 
     try {
-      // Call your backend API to verify the code
-      const response = await fetch('/api/verify-reset-code', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email, 
-          code: fullCode 
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setResetToken(data.token);
-      } else {
-        // Even if verification fails, we can still proceed to ChangePassword
-        // You might want to pass the code instead of token in this case
-        setResetToken(fullCode); // Using the code as token for demonstration
-      }
+      // Call backend API to verify the code
+      const response = await ApiService.verifyPasswordResetCode(email, fullCode);
       
-      // Always redirect to ChangePassword regardless of verification result
+      console.log('Code verification successful:', response);
+      setIsCodeValid(true);
       setShowChangePassword(true);
+      
+      // Show success message if provided by backend
+      if (response.message) {
+        console.log(response.message);
+      }
     } catch (error) {
-      // Even on error, redirect to ChangePassword
-      setResetToken(fullCode); // Using the code as fallback
-      setShowChangePassword(true);
       console.error('Code verification error:', error);
+      setError(error.message || 'Invalid verification code. Please try again.');
+      setIsCodeValid(false);
     } finally {
       setIsVerifying(false);
     }
@@ -142,6 +128,7 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
 
   const handleChangePasswordBack = () => {
     setShowChangePassword(false);
+    setIsCodeValid(false);
   };
 
   const handleChangePasswordSuccess = (data) => {
@@ -156,12 +143,11 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
   };
 
   // Show ChangePassword component if verification was successful
-  if (showChangePassword) {
+  if (showChangePassword && isCodeValid) {
     return (
       <ChangePassword
         email={email}
-        token={resetToken}
-        code={code.join('')} // Pass the code as well
+        code={code.join('')}
         onBack={handleChangePasswordBack}
         onSuccess={handleChangePasswordSuccess}
       />
@@ -217,7 +203,7 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
       </div>
 
       <p className="text-gray-600 dark:text-gray-400">
-        We've sent a 6-digit code to <strong>{email}</strong>
+        We've sent a 6-digit verification code to <strong>{email}</strong>
       </p>
 
       {/* Gmail Link */}
@@ -236,7 +222,7 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
       <form onSubmit={handleCodeSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Enter 6-digit code
+            Enter 6-digit verification code
           </label>
           <div className="flex space-x-3 justify-center">
             {code.map((digit, index) => (
@@ -263,10 +249,10 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
         <div className="text-center text-sm">
           {timeLeft > 0 ? (
             <span className="text-gray-600 dark:text-gray-400">
-              Link expires in: <strong className={timeLeft <= 300 ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400"}>{formatTime(timeLeft)}</strong>
+              Code expires in: <strong className={timeLeft <= 300 ? "text-red-600 dark:text-red-400" : "text-blue-600 dark:text-blue-400"}>{formatTime(timeLeft)}</strong>
             </span>
           ) : (
-            <span className="text-red-600 dark:text-red-400">Link has expired. Please request a new code.</span>
+            <span className="text-red-600 dark:text-red-400">Code has expired. Please request a new code.</span>
           )}
         </div>
 
@@ -278,7 +264,7 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
           {isVerifying ? (
             <div className="flex items-center justify-center w-full">
               <LoadingSpinner size="small" color="white" />
-              <span className="ml-2">Verifying...</span>
+              <span className="ml-2">Verifying Code...</span>
             </div>
           ) : (
             "Verify Code"
@@ -291,8 +277,9 @@ const ForgotPassword = ({ email, onBack, onSuccess }) => {
           <button
             onClick={handleSendCode}
             className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+            disabled={isLoading}
           >
-            Request new code
+            {isLoading ? "Sending..." : "Request new code"}
           </button>
         </div>
       )}
