@@ -1,0 +1,25 @@
+.env
+GIDE.db
+__pycache__/
+*.pyc
+venv/
+
+
+# Python virtual environment
+venv/
+
+# Environment variables
+.env
+
+# Firebase Admin SDK key
+firebase-adminsdk.json
+
+# SQLite database file
+GIDE.db
+
+# Other potential ignores you might need later
+ .pytest_cache/
+ __pycache__/
+# *.pyc
+# *.log
+# .DS_Store # macOS specific
